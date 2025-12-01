@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom'; // Plus besoin de BrowserRouter ici
-import { Home, ShoppingCart, Calendar, PiggyBank } from 'lucide-react';
+import { Home, ShoppingCart, Calendar, Sparkles } from 'lucide-react';
 
 // 1. AJOUTE CET IMPORT ICI
 import { Analytics } from '@vercel/analytics/react';
