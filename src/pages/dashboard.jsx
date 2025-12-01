@@ -19,8 +19,8 @@ export default function Dashboard() {
         
         {/* Module Ménage */}
         <Card 
-          title="Ménage" 
-          to="/menage" 
+          title="Services" 
+          to="/services" 
           icon={Sparkles} 
           color="indigo" 
           description="Suivi & Heures"
