@@ -1,15 +1,14 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom'; // Plus besoin de BrowserRouter ici
 import { Home, ShoppingCart, Calendar, PiggyBank } from 'lucide-react';
 
-// Import des pages
-import Dashboard from './pages/Dashboard';
-import Menage from './pages/Payement';
+import Dashboard from './pages/dashboard';
+import Payement from './pages/payement'; // Assure-toi que l'import correspond au fichier
 
-// Composant pour les boutons de navigation (change de couleur si actif)
 const NavLink = ({ to, icon: Icon, label }) => {
   const location = useLocation();
-  const isActive = location.pathname === to;
+  // Vérifie si le chemin commence par 'to' pour garder actif même dans les sous-pages
+  const isActive = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
   
   return (
     <Link 
@@ -27,29 +26,28 @@ const NavLink = ({ to, icon: Icon, label }) => {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-slate-50 pb-24">
+      
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
         
-        {/* LE CONTENU CHANGE ICI SELON L'URL */}
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/menage" element={<Menage />} />
-          
-          {/* Pages "En construction" pour l'instant */}
-          <Route path="/courses" element={<div className="p-10 text-center text-slate-400">Page Courses en construction...</div>} />
-          <Route path="/planning" element={<div className="p-10 text-center text-slate-400">Page Planning en construction...</div>} />
-          <Route path="/banque" element={<div className="p-10 text-center text-slate-400">Page Banque en construction...</div>} />
-          <Route path="/repas" element={<div className="p-10 text-center text-slate-400">Page Repas en construction...</div>} />
-        </Routes>
+        {/* CORRECTION : J'ai mis "/menage" pour correspondre à ton Dashboard.jsx */}
+        <Route path="/menage" element={<Payement />} />
+        
+        <Route path="/courses" element={<div className="p-10 text-center text-slate-400">Page Courses...</div>} />
+        <Route path="/planning" element={<div className="p-10 text-center text-slate-400">Page Planning...</div>} />
+        <Route path="/banque" element={<div className="p-10 text-center text-slate-400">Page Banque...</div>} />
+        <Route path="/repas" element={<div className="p-10 text-center text-slate-400">Page Repas...</div>} />
+      </Routes>
 
-        {/* BARRE DE NAVIGATION (Fixe en bas) */}
-        <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 py-3 px-6 flex justify-around items-center z-50 text-[10px] font-bold">
-          <NavLink to="/" icon={Home} label="Accueil" />
-          <NavLink to="/courses" icon={ShoppingCart} label="Courses" />
-          <NavLink to="/planning" icon={Calendar} label="Agenda" />
-          <NavLink to="/banque" icon={PiggyBank} label="Banque" />
-        </nav>
-      </div>
-    </BrowserRouter>
+      {/* Barre de navigation */}
+      <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 py-3 px-6 flex justify-around items-center z-50 text-[10px] font-bold">
+        <NavLink to="/" icon={Home} label="Accueil" />
+        {/* Ajout du lien direct vers le ménage dans la barre du bas aussi */}
+        <NavLink to="/menage" icon={PiggyBank} label="Ménage" /> 
+        <NavLink to="/courses" icon={ShoppingCart} label="Courses" />
+        <NavLink to="/planning" icon={Calendar} label="Agenda" />
+      </nav>
+    </div>
   );
 }
