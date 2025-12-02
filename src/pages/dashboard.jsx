@@ -7,13 +7,28 @@ import logo from '../assets/full-logo.png';
 export default function Dashboard() {
   return (
     <div className="p-6 max-w-md mx-auto space-y-8">
-      
-      {/* En-tête avec date */}
-      <header>
-        <img src={logo} alt="MyFamilyOS - Simplified Family Management" className="h-16" />
-        <p className="text-slate-500 font-medium">
-          {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-        </p>
+      {/* NOUVEAU HEADER CENTRÉ ET ESTHÉTIQUE */}
+      <header className="flex flex-col items-center justify-center pt-8 pb-4">
+        
+        {/* Le Logo : Plus grand et centré */}
+        <div className="mb-2">
+           <img 
+             src={logo} 
+             alt="MyFamilyOS" 
+             // mix-blend-multiply permet de "fondre" le fond de l'image avec la page si besoin
+             className="h-40 w-auto object-contain mix-blend-multiply drop-shadow-sm transform hover:scale-105 transition-transform duration-300" 
+           />
+        </div>
+
+        {/* La date : Plus discrète et élégante en dessous */}
+        <div className="relative">
+          <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-xs">
+            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+          {/* Petit trait déco en dessous */}
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-indigo-200 rounded-full"></div>
+        </div>
+
       </header>
 
       {/* Grille des applications */}
