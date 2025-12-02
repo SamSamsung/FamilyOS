@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom'; // Plus besoin de BrowserRouter ici
-import { Home, ShoppingCart, Calendar, Sparkles } from 'lucide-react';
+import { Home, ShoppingCart, Calendar, Sparkles, PiggyBank } from 'lucide-react';
 
 // 1. AJOUTE CET IMPORT ICI
 import { Analytics } from '@vercel/analytics/react';
@@ -36,7 +36,7 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         
         {/* CORRECTION : J'ai mis "/menage" pour correspondre à ton Dashboard.jsx */}
-        <Route path="/service" element={<Services />} />
+        <Route path="/services" element={<Services />} />
         
         <Route path="/courses" element={<div className="p-10 text-center text-slate-400">Page Courses...</div>} />
         <Route path="/planning" element={<div className="p-10 text-center text-slate-400">Page Planning...</div>} />
@@ -48,7 +48,7 @@ export default function App() {
       <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 py-3 px-6 flex justify-around items-center z-50 text-[10px] font-bold">
         <NavLink to="/" icon={Home} label="Accueil" />
         {/* Ajout du lien direct vers le ménage dans la barre du bas aussi */}
-        <NavLink to="/service" icon={Sparkles} label="Services" /> 
+        <NavLink to="/services" icon={Sparkles} label="Services" /> 
         <NavLink to="/courses" icon={ShoppingCart} label="Courses" />
         <NavLink to="/planning" icon={Calendar} label="Agenda" />
       </nav>
