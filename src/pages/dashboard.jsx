@@ -1,6 +1,8 @@
 import React from 'react';
 import Card from '../components/Card';
 import { Sparkles, ShoppingCart, Calendar, PiggyBank, ChefHat } from 'lucide-react';
+import logo from '../assets/full-logo.png';
+
 
 export default function Dashboard() {
   return (
@@ -8,7 +10,7 @@ export default function Dashboard() {
       
       {/* En-tête avec date */}
       <header>
-        <h1 className="text-3xl font-black text-slate-800">Family OS</h1>
+        <img src={logo} alt="MyFamilyOS - Simplified Family Management" className="h-16" />
         <p className="text-slate-500 font-medium">
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
