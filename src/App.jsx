@@ -3,7 +3,7 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Home, ShoppingCart, Calendar, PiggyBank, LogIn, Sparkles } from 'lucide-react';
 import { onAuthStateChanged, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from './firebase'; // On importe notre config
-import logo from './assets/logo-intendance.png'; // Assure-toi que ton logo est là
+import logo from './assets/full-logo.png'; // Assure-toi que ton logo est là
 
 import Dashboard from './pages/dashboard';
 import Services from './pages/services';
