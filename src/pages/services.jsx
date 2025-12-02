@@ -244,7 +244,7 @@ export default function Payement() {
     <div className="min-h-screen bg-slate-50 pb-20 font-sans text-slate-800 select-none">
       
       {/* HEADER SIMPLIFIÉ */}
-      <header className="bg-white px-6 py-4 sticky top-0 z-10 border-b border-slate-100">
+      <header className="bg-white px-6 py-4 sticky top-0 z-40 border-b border-slate-100">
         <div className="max-w-md mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="bg-indigo-100 p-2.5 rounded-full text-indigo-600">
@@ -396,7 +396,7 @@ export default function Payement() {
 
       {/* MODAL EDITION */}
       {selectedDate && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center pointer-events-none">
           {/* Backdrop avec flou */}
           <div 
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm pointer-events-auto transition-opacity"
