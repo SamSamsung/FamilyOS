@@ -1,24 +1,55 @@
-import React from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom'; // Plus besoin de BrowserRouter ici
-import { Home, ShoppingCart, Calendar, Sparkles, PiggyBank } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Home, ShoppingCart, Calendar, PiggyBank, LogIn, Sparkles } from 'lucide-react';
+import { onAuthStateChanged, signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from './firebase'; // On importe notre config
+import logo from './assets/logo-intendance.png'; // Assure-toi que ton logo est là
 
-// 1. AJOUTE CET IMPORT ICI
-import { Analytics } from '@vercel/analytics/react';
 import Dashboard from './pages/dashboard';
-import Services from './pages/services'; // Assure-toi que l'import correspond au fichier
+import Services from './pages/services';
 
+// --- COMPOSANT LOGIN (Page d'accueil si pas connecté) ---
+const LoginScreen = () => {
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.error("Erreur de connexion", error);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+      <div className="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full flex flex-col items-center space-y-8">
+        {/* LOGO */}
+        <img src={logo} alt="Logo" className="h-32 w-auto object-contain mix-blend-multiply" />
+        
+        <div>
+          <h2 className="text-2xl font-black text-slate-800">MyFamilyOS</h2>
+          <p className="text-slate-500 mt-2 font-medium">L'intendance familiale simplifiée.</p>
+        </div>
+
+        <button 
+          onClick={handleLogin}
+          className="w-full py-3 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-sm"
+        >
+          <LogIn size={20} />
+          Continuer avec Google
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// --- NAVIGATION DU BAS ---
 const NavLink = ({ to, icon: Icon, label }) => {
   const location = useLocation();
-  // Vérifie si le chemin commence par 'to' pour garder actif même dans les sous-pages
   const isActive = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
   
   return (
     <Link 
       to={to} 
-      className={`
-        flex flex-col items-center gap-1 transition-colors duration-200
-        ${isActive ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}
-      `}
+      className={`flex flex-col items-center gap-1 transition-colors duration-200 ${isActive ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
     >
       <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
       <span>{label}</span>
@@ -26,29 +57,44 @@ const NavLink = ({ to, icon: Icon, label }) => {
   );
 };
 
+// --- APP PRINCIPALE ---
 export default function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>;
+  }
+
+  // SI PAS CONNECTÉ -> PAGE LOGIN
+  if (!user) {
+    return <LoginScreen />;
+  }
+
+  // SI CONNECTÉ -> APPLICATION NORMALE
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
-      
-      <Analytics />
-
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        
-        {/* CORRECTION : J'ai mis "/menage" pour correspondre à ton Dashboard.jsx */}
         <Route path="/services" element={<Services />} />
         
+        {/* Autres pages */}
         <Route path="/courses" element={<div className="p-10 text-center text-slate-400">Page Courses...</div>} />
         <Route path="/planning" element={<div className="p-10 text-center text-slate-400">Page Planning...</div>} />
-        <Route path="/banque" element={<div className="p-10 text-center text-slate-400">Page Banque...</div>} />
-        <Route path="/repas" element={<div className="p-10 text-center text-slate-400">Page Repas...</div>} />
       </Routes>
 
       {/* Barre de navigation */}
       <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 py-3 px-6 flex justify-around items-center z-50 text-[10px] font-bold">
         <NavLink to="/" icon={Home} label="Accueil" />
-        {/* Ajout du lien direct vers le ménage dans la barre du bas aussi */}
-        <NavLink to="/services" icon={Sparkles} label="Services" /> 
+        <NavLink to="/services" icon={Sparkles} label="Services" />
         <NavLink to="/courses" icon={ShoppingCart} label="Courses" />
         <NavLink to="/planning" icon={Calendar} label="Agenda" />
       </nav>
