@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  ChevronLeft, ChevronRight, Euro, Clock, Settings, Trash2, CheckCircle, X, Sparkles 
+  ChevronLeft, ChevronRight, Euro, Clock, Settings, Trash2, CheckCircle, X 
 } from 'lucide-react';
 import { doc, setDoc, onSnapshot, query, collection, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 
-// Tes composants UI d'origine
+// Tes composants UI originaux
 const Button = ({ children, onClick, variant = 'primary', className = '', disabled = false }) => {
   const baseStyle = "px-4 py-3 rounded-xl font-bold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 shadow-sm";
   const variants = {
@@ -16,28 +16,27 @@ const Button = ({ children, onClick, variant = 'primary', className = '', disabl
   return <button onClick={onClick} disabled={disabled} className={`${baseStyle} ${variants[variant]} ${className}`}>{children}</button>;
 };
 
-export default function Services() {
+export default function Payement() {
   const user = auth.currentUser;
-  const [familyId, setFamilyId] = useState(null);
+  const [familyId, setFamilyId] = useState(null); // Ajout nécessaire
   const [entries, setEntries] = useState({});
   const [hourlyRate, setHourlyRate] = useState(15);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [editHours, setEditHours] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
 
-  // 1. Récupération du familyId (Nécessaire pour le nouveau système)
+  // 1. Récupération du familyId
   useEffect(() => {
     if (!user) return;
     const userRef = doc(db, 'users', user.uid);
     const unsub = onSnapshot(userRef, (snap) => {
-      if (snap.exists()) {
-        setFamilyId(snap.data().familyId);
-      }
+      if (snap.exists()) setFamilyId(snap.data().familyId);
     });
     return () => unsub();
   }, [user]);
 
-  // 2. Chargement des données via familyId
+  // 2. Écoute des données de la FAMILLE
   useEffect(() => {
     if (!familyId) return;
 
@@ -55,7 +54,6 @@ export default function Services() {
     return () => { unsubEntries(); unsubSettings(); };
   }, [familyId]);
 
-  // Logique métier d'origine
   const formatHoursFriendly = (h) => {
     const mins = h * 60;
     if (mins < 60) return `${mins}min`;
@@ -93,23 +91,19 @@ export default function Services() {
     setSelectedDate(null);
   };
 
-  // Affichage si l'utilisateur n'est pas encore lié à une famille
-  if (!familyId) return (
-    <div className="p-10 text-center space-y-4 pt-40">
-      <div className="bg-indigo-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto text-indigo-600 mb-4">
-        <Sparkles size={32} />
-      </div>
-      <h2 className="text-xl font-bold text-slate-800">Famille requise</h2>
-      <p className="text-slate-500">Créez ou rejoignez une famille dans l'onglet "Ma Famille" pour commencer.</p>
-    </div>
-  );
+  const updateRate = async (newRate) => {
+    setHourlyRate(newRate);
+    await setDoc(doc(db, 'families', familyId, 'settings', 'config'), { hourlyRate: newRate }, { merge: true });
+  };
+
+  if (!familyId) return <div className="p-10 text-center pt-40 text-slate-400">Veuillez rejoindre une famille...</div>;
 
   return (
-    <div className="p-6 max-w-md mx-auto space-y-6 pt-10 pb-32">
-      {/* Ton Header d'origine */}
+    <div className="p-6 max-w-md mx-auto space-y-6 pt-10">
+      {/* Header Statistique */}
       <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
         <div className="relative z-10">
-          <p className="text-indigo-100 font-bold text-xs uppercase tracking-widest mb-1">Ménage • {currentDate.toLocaleDateString('fr-FR', {month: 'long'})}</p>
+          <p className="text-indigo-100 font-bold text-xs uppercase tracking-widest mb-1">Total ce mois</p>
           <h2 className="text-4xl font-black mb-6">{(monthTotalHours * hourlyRate).toFixed(2)}€</h2>
           <div className="flex gap-6">
             <div className="flex items-center gap-2">
@@ -122,10 +116,9 @@ export default function Services() {
             </div>
           </div>
         </div>
-        <Sparkles className="absolute -right-4 -top-4 w-32 h-32 text-white/10 rotate-12" />
       </div>
 
-      {/* Sélecteur de mois */}
+      {/* Calendrier et Sélecteur */}
       <div className="flex items-center justify-between px-2">
         <h3 className="text-lg font-black text-slate-800 capitalize">
           {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
@@ -136,7 +129,6 @@ export default function Services() {
         </div>
       </div>
 
-      {/* Calendrier */}
       <div className="grid grid-cols-7 gap-2">
         {daysInMonth.map(date => {
           const dateStr = date.toISOString().split('T')[0];
@@ -146,7 +138,7 @@ export default function Services() {
               key={dateStr}
               onClick={() => { setSelectedDate(date); setEditHours(hours); }}
               className={`aspect-square rounded-2xl flex flex-col items-center justify-center transition-all ${
-                hours > 0 ? 'bg-indigo-600 text-white ring-4 ring-indigo-100 shadow-lg shadow-indigo-100' : 'bg-white text-slate-400 border border-slate-100 hover:border-indigo-200'
+                hours > 0 ? 'bg-indigo-600 text-white ring-4 ring-indigo-50' : 'bg-white text-slate-400 border border-slate-100'
               }`}
             >
               <span className="text-[10px] font-black">{date.getDate()}</span>
@@ -156,27 +148,59 @@ export default function Services() {
         })}
       </div>
 
-      {/* Modal Edition d'origine */}
+      {/* Modal Edition (Ton style original) */}
       {selectedDate && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end">
-          <div className="bg-white w-full rounded-t-[2.5rem] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="bg-white w-full rounded-t-[2.5rem] p-8 shadow-2xl">
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-xl font-black text-slate-800">{selectedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</h3>
-              <button onClick={() => setSelectedDate(null)} className="p-2 bg-slate-100 rounded-full text-slate-400"><X size={20}/></button>
+              <button onClick={() => setSelectedDate(null)} className="bg-slate-100 p-2 rounded-full text-slate-500"><X size={20}/></button>
             </div>
-            
-            <div className="flex flex-col items-center mb-8 bg-slate-50 rounded-[2rem] p-8 border border-slate-100">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">DURÉE DU SERVICE</span>
-              <div className="flex items-center gap-8">
-                <button onClick={() => setEditHours(h => Math.max(0, h - 0.25))} className="w-14 h-14 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center text-2xl font-bold text-slate-400">-</button>
-                <div className="w-24 text-center text-4xl font-black text-slate-800">{formatHoursFriendly(editHours)}</div>
-                <button onClick={() => setEditHours(h => h + 0.25)} className="w-14 h-14 rounded-2xl bg-indigo-600 text-white shadow-lg flex items-center justify-center text-2xl font-bold">+</button>
+            <div className="flex flex-col items-center mb-8 bg-slate-50 rounded-3xl p-6 border border-slate-100">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Durée</span>
+              <div className="flex items-center gap-6">
+                <button onClick={() => setEditHours(h => Math.max(0, h - 0.25))} className="w-14 h-14 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center text-3xl text-slate-400 shadow-sm">-</button>
+                <div className="w-28 text-center"><span className="text-4xl font-black text-slate-800">{formatHoursFriendly(editHours)}</span></div>
+                <button onClick={() => setEditHours(h => h + 0.25)} className="w-14 h-14 rounded-2xl bg-indigo-600 text-white shadow-lg flex items-center justify-center text-3xl">+</button>
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Button variant="secondary" onClick={() => setSelectedDate(null)}>Annuler</Button>
               <Button onClick={saveEntry}>Enregistrer</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bouton Paramètres (Restauré) */}
+      <button 
+        onClick={() => setShowSettings(true)}
+        className="fixed bottom-28 right-6 w-12 h-12 bg-white rounded-full shadow-lg border border-slate-100 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors"
+      >
+        <Settings size={20} />
+      </button>
+
+      {/* Modal Paramètres */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end">
+          <div className="bg-white w-full rounded-t-[2.5rem] p-8 shadow-2xl">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-xl font-black text-slate-800">Paramètres</h3>
+              <button onClick={() => setShowSettings(false)} className="bg-slate-100 p-2 rounded-full text-slate-500"><X size={20}/></button>
+            </div>
+            <div className="space-y-6">
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-3">Taux horaire (€/h)</label>
+                <div className="flex items-center gap-4">
+                  <input 
+                    type="number" 
+                    value={hourlyRate} 
+                    onChange={(e) => updateRate(parseFloat(e.target.value))}
+                    className="flex-1 bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+              </div>
+              <Button className="w-full" onClick={() => setShowSettings(false)}>Fermer</Button>
             </div>
           </div>
         </div>
