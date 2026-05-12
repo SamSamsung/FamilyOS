@@ -193,8 +193,21 @@ export default function Payement() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="secondary" onClick={() => setSelectedDate(null)}>Annuler</Button>
-              <Button onClick={saveEntry}>Enregistrer</Button>
+              <Button variant="secondary" onClick={() => setSelectedDate(null)}>
+                Annuler
+              </Button>
+              
+              {/* Si on est à 0h et qu'il y avait déjà une entrée existante, on affiche "Supprimer" */}
+              {editHours === 0 && entries[selectedDate.toISOString().split('T')[0]] > 0 ? (
+                <Button variant="danger" onClick={saveEntry}>
+                  <Trash2 size={18} />
+                  Supprimer
+                </Button>
+              ) : (
+                <Button onClick={saveEntry}>
+                  Enregistrer
+                </Button>
+              )}
             </div>
           </div>
         </div>
