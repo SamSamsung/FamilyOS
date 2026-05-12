@@ -148,47 +148,52 @@ export default function Payement() {
         })}
       </div>
 
-      {/* Modal Edition EXACTEMENT comme ton original */}
+      {/* Modal Edition */}
       {selectedDate && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end">
-          <div className="bg-white w-full rounded-t-[2.5rem] p-8 shadow-2xl">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center">
+          <div className="bg-white w-full max-w-md rounded-t-[2.5rem] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-xl font-black text-slate-800">
                 {selectedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
               </h3>
               <button 
                 onClick={() => setSelectedDate(null)} 
-                className="bg-slate-100 p-2 rounded-full text-slate-500"
+                className="bg-slate-100 p-2 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"
               >
                 <X size={20}/>
               </button>
             </div>
 
-            {/* C'est ce bloc qui définit l'aspect du sélecteur d'heures */}
-            <div className="flex flex-col items-center mb-8 bg-slate-50 rounded-3xl p-6 border border-slate-100">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Durée</span>
-              <div className="flex items-center gap-6">
+            {/* BLOC SÉLECTEUR CENTRÉ */}
+            <div className="flex flex-col items-center justify-center mb-8 bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">
+                DURÉE DU SERVICE
+              </span>
+              
+              <div className="flex items-center justify-center gap-6 w-full">
                 <button 
                   onClick={() => setEditHours(h => Math.max(0, h - 0.25))} 
-                  className="w-14 h-14 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center text-3xl text-slate-400 shadow-sm"
+                  className="w-14 h-14 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center text-3xl text-slate-400 shadow-sm active:scale-90 transition-transform"
                 >
                   -
                 </button>
-                <div className="w-28 text-center">
-                  <span className="text-4xl font-black text-slate-800">
+                
+                <div className="w-32 flex justify-center items-center">
+                  <span className="text-4xl font-black text-slate-800 tabular-nums">
                     {formatHoursFriendly(editHours)}
                   </span>
                 </div>
+                
                 <button 
                   onClick={() => setEditHours(h => h + 0.25)} 
-                  className="w-14 h-14 rounded-2xl bg-indigo-600 text-white shadow-lg flex items-center justify-center text-3xl"
+                  className="w-14 h-14 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-100 flex items-center justify-center text-3xl active:scale-90 transition-transform"
                 >
                   +
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <Button variant="secondary" onClick={() => setSelectedDate(null)}>Annuler</Button>
               <Button onClick={saveEntry}>Enregistrer</Button>
             </div>
