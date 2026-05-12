@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { 
-  doc, getDoc, updateDoc, arrayUnion, collection, addDoc, onSnapshot 
+  doc, getDoc, setDoc, updateDoc, arrayUnion, collection, addDoc, onSnapshot 
 } from 'firebase/firestore';
 import { Users, UserPlus, Check, X, Shield, Share2 } from 'lucide-react';
 
 export default function FamilyPage({ user }) {
   const [userData, setUserData] = useState(null);
   const [familyData, setFamilyData] = useState(null);
-  const [namesMap, setNamesMap] = useState({}); // Pour stocker UID -> displayName
+  const [profilesMap, setProfilesMap] = useState({}); // Stocke { name, photo }
   const [loading, setLoading] = useState(true);
   
   const [newFamilyName, setNewFamilyName] = useState('');
@@ -41,21 +41,23 @@ export default function FamilyPage({ user }) {
     return () => unsubUser();
   }, [user]);
 
-  // 2. Charger les pseudos des membres et des demandes en attente
+  // 2. Charger les profils (Nom + Photo) des membres et des demandes en attente
   useEffect(() => {
     if (!familyData) return;
     
     const allUids = [...familyData.members, ...(familyData.pendingRequests || [])];
     
     allUids.forEach(async (uid) => {
-      // On ne recharge que si on n'a pas déjà le nom en mémoire
-      if (!namesMap[uid]) {
+      if (!profilesMap[uid]) {
         const userRef = doc(db, 'users', uid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
-          setNamesMap(prev => ({ 
+          setProfilesMap(prev => ({ 
             ...prev, 
-            [uid]: userSnap.data().displayName || "Utilisateur sans nom" 
+            [uid]: {
+              name: userSnap.data().displayName || "Utilisateur sans nom",
+              photo: userSnap.data().photoURL || null
+            }
           }));
         }
       }
@@ -171,21 +173,28 @@ export default function FamilyPage({ user }) {
           <div className="bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-100 border border-slate-50">
             <h3 className="font-bold text-slate-800 mb-4 ml-2">Membres</h3>
             <div className="space-y-3">
-              {familyData.members.map(uid => (
-                <div key={uid} className="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl">
-                  <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-indigo-600 shadow-sm">
-                    <Shield size={18} />
+              {familyData.members.map(uid => {
+                const profile = profilesMap[uid] || {};
+                return (
+                  <div key={uid} className="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl">
+                    {profile.photo ? (
+                      <img src={profile.photo} alt="Profil" className="w-10 h-10 rounded-xl object-cover shadow-sm" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-indigo-600 shadow-sm">
+                        <Shield size={18} />
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-700">
+                        {profile.name || "Chargement..."}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                        {uid === familyData.adminId ? "Administrateur" : "Membre"}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-slate-700">
-                      {namesMap[uid] || "Chargement..."}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                      {uid === familyData.adminId ? "Administrateur" : "Membre"}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -194,30 +203,42 @@ export default function FamilyPage({ user }) {
             <div className="bg-amber-50 p-6 rounded-[2.5rem] border border-amber-100 shadow-xl shadow-amber-100/20">
               <h3 className="font-bold text-amber-800 mb-4 ml-2">Demandes en attente</h3>
               <div className="space-y-3">
-                {familyData.pendingRequests.map(uid => (
-                  <div key={uid} className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-700">
-                        {namesMap[uid] || "Chargement..."}
-                      </span>
-                      <span className="text-[10px] font-mono text-slate-400">{uid.substring(0, 8)}</span>
+                {familyData.pendingRequests.map(uid => {
+                  const profile = profilesMap[uid] || {};
+                  return (
+                    <div key={uid} className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm">
+                      <div className="flex items-center gap-3">
+                        {profile.photo ? (
+                          <img src={profile.photo} alt="Profil" className="w-8 h-8 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
+                            <UserPlus size={14} />
+                          </div>
+                        )}
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-slate-700">
+                            {profile.name || "Chargement..."}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-400">{uid.substring(0, 8)}</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleAcceptMember(uid)}
+                          className="p-2 bg-emerald-500 text-white rounded-xl shadow-md shadow-emerald-100 active:scale-90 transition-all"
+                        >
+                          <Check size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleRejectMember(uid)}
+                          className="p-2 bg-slate-100 text-slate-400 rounded-xl active:scale-90 transition-all"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => handleAcceptMember(uid)}
-                        className="p-2 bg-emerald-500 text-white rounded-xl shadow-md shadow-emerald-100 active:scale-90 transition-all"
-                      >
-                        <Check size={18} />
-                      </button>
-                      <button 
-                        onClick={() => handleRejectMember(uid)}
-                        className="p-2 bg-slate-100 text-slate-400 rounded-xl active:scale-90 transition-all"
-                      >
-                        <X size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
