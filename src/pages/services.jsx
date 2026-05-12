@@ -24,9 +24,20 @@ const Card = ({ children, className = '' }) => (
 export default function Payement() {
   const user = auth.currentUser; // On récupère l'utilisateur connecté directement
   
-  // --- LOGIQUE FAMILLE : Chacun sa bulle pour l'instant ---
-  // Plus tard, on pourra remplacer ça par un code de partage
-  const FAMILY_ID = user ? user.uid : 'demo'; 
+  // --- LOGIQUE FAMILLE ---
+  const [familyId, setFamilyId] = useState(null);
+
+  useEffect(() => {
+  if (!user) return;
+  // 1. Chercher l'utilisateur pour trouver son familyId
+  const userDocRef = doc(db, 'users', user.uid);
+  const unsub = onSnapshot(userDocRef, (snap) => {
+    if (snap.exists()) {
+      setFamilyId(snap.data().familyId);
+    }
+  });
+  return () => unsub();
+}, [user]);
 
   const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); 
   const [entries, setEntries] = useState({});
