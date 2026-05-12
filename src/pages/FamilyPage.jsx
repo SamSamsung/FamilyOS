@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { 
-  doc, getDoc, setDoc, updateDoc, arrayUnion, collection, addDoc, onSnapshot 
+  doc, getDoc, updateDoc, arrayUnion, collection, addDoc, onSnapshot 
 } from 'firebase/firestore';
 import { Users, UserPlus, Check, X, Shield, Share2 } from 'lucide-react';
 
 export default function FamilyPage({ user }) {
   const [userData, setUserData] = useState(null);
   const [familyData, setFamilyData] = useState(null);
+  const [namesMap, setNamesMap] = useState({}); // Pour stocker UID -> displayName
   const [loading, setLoading] = useState(true);
   
   const [newFamilyName, setNewFamilyName] = useState('');
   const [joinFamilyId, setJoinFamilyId] = useState('');
 
+  // 1. Écouter le profil utilisateur et la famille
   useEffect(() => {
     if (!user) return;
     
@@ -38,6 +40,27 @@ export default function FamilyPage({ user }) {
 
     return () => unsubUser();
   }, [user]);
+
+  // 2. Charger les pseudos des membres et des demandes en attente
+  useEffect(() => {
+    if (!familyData) return;
+    
+    const allUids = [...familyData.members, ...(familyData.pendingRequests || [])];
+    
+    allUids.forEach(async (uid) => {
+      // On ne recharge que si on n'a pas déjà le nom en mémoire
+      if (!namesMap[uid]) {
+        const userRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          setNamesMap(prev => ({ 
+            ...prev, 
+            [uid]: userSnap.data().displayName || "Utilisateur sans nom" 
+          }));
+        }
+      }
+    });
+  }, [familyData]);
 
   const handleCreateFamily = async () => {
     if (!newFamilyName.trim()) return;
@@ -117,8 +140,9 @@ export default function FamilyPage({ user }) {
       </div>
 
       {userData?.familyId && familyData ? (
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+        <div className="space-y-6 pb-20">
+          {/* CARTE INFO FAMILLE */}
+          <div className="bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-100 border border-slate-50">
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-indigo-100 p-2 rounded-xl text-indigo-600">
                 <Users size={24} />
@@ -143,41 +167,53 @@ export default function FamilyPage({ user }) {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-            <h3 className="font-bold text-slate-800 mb-4">Membres</h3>
+          {/* LISTE DES MEMBRES */}
+          <div className="bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-100 border border-slate-50">
+            <h3 className="font-bold text-slate-800 mb-4 ml-2">Membres</h3>
             <div className="space-y-3">
               {familyData.members.map(uid => (
-                <div key={uid} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                    <Shield size={16} />
+                <div key={uid} className="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl">
+                  <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-indigo-600 shadow-sm">
+                    <Shield size={18} />
                   </div>
-                  <span className="text-sm font-medium text-slate-600">
-                    {uid === user.uid ? "Moi (Admin)" : `Membre (${uid.substring(0, 5)})`}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-slate-700">
+                      {namesMap[uid] || "Chargement..."}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                      {uid === familyData.adminId ? "Administrateur" : "Membre"}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
+          {/* DEMANDES EN ATTENTE */}
           {familyData.adminId === user.uid && familyData.pendingRequests?.length > 0 && (
-            <div className="bg-amber-50 p-6 rounded-3xl border border-amber-100">
-              <h3 className="font-bold text-amber-800 mb-4">Demandes en attente</h3>
+            <div className="bg-amber-50 p-6 rounded-[2.5rem] border border-amber-100 shadow-xl shadow-amber-100/20">
+              <h3 className="font-bold text-amber-800 mb-4 ml-2">Demandes en attente</h3>
               <div className="space-y-3">
                 {familyData.pendingRequests.map(uid => (
-                  <div key={uid} className="flex items-center justify-between bg-white p-3 rounded-2xl shadow-sm">
-                    <span className="text-xs font-mono text-slate-500">{uid.substring(0, 8)}...</span>
+                  <div key={uid} className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-700">
+                        {namesMap[uid] || "Chargement..."}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">{uid.substring(0, 8)}</span>
+                    </div>
                     <div className="flex gap-2">
                       <button 
                         onClick={() => handleAcceptMember(uid)}
-                        className="p-2 bg-emerald-500 text-white rounded-lg"
+                        className="p-2 bg-emerald-500 text-white rounded-xl shadow-md shadow-emerald-100 active:scale-90 transition-all"
                       >
-                        <Check size={16} />
+                        <Check size={18} />
                       </button>
                       <button 
                         onClick={() => handleRejectMember(uid)}
-                        className="p-2 bg-slate-200 text-slate-600 rounded-lg"
+                        className="p-2 bg-slate-100 text-slate-400 rounded-xl active:scale-90 transition-all"
                       >
-                        <X size={16} />
+                        <X size={18} />
                       </button>
                     </div>
                   </div>
@@ -187,17 +223,14 @@ export default function FamilyPage({ user }) {
           )}
         </div>
       ) : (
+        /* ... reste de ton code pour créer/rejoindre ... */
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600">
-                <UserPlus size={24} />
-              </div>
-              <h2 className="text-lg font-bold">Créer un foyer</h2>
-            </div>
+          {/* Bloc Créer */}
+          <div className="bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-100 border border-slate-50">
+            <h2 className="text-lg font-bold mb-4 ml-2">Créer un foyer</h2>
             <input 
               type="text" 
-              placeholder="Nom de la famille (ex: Les Dupont)" 
+              placeholder="Nom de la famille" 
               value={newFamilyName}
               onChange={(e) => setNewFamilyName(e.target.value)}
               className="w-full p-4 bg-slate-50 border-none rounded-2xl mb-4 focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
@@ -210,11 +243,12 @@ export default function FamilyPage({ user }) {
             </button>
           </div>
 
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-            <h2 className="text-lg font-bold mb-4">Rejoindre un foyer</h2>
+          {/* Bloc Rejoindre */}
+          <div className="bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-100 border border-slate-50">
+            <h2 className="text-lg font-bold mb-4 ml-2">Rejoindre un foyer</h2>
             <input 
               type="text" 
-              placeholder="Coller l'ID de la famille" 
+              placeholder="Code de la famille" 
               value={joinFamilyId}
               onChange={(e) => setJoinFamilyId(e.target.value)}
               className="w-full p-4 bg-slate-50 border-none rounded-2xl mb-4 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm"
