@@ -7,6 +7,7 @@ import { doc, setDoc } from 'firebase/firestore'; // AJOUT : fonctions firestore
 import logo from './assets/full-logo.png';
 
 
+import TrackerPage from './pages/TrackerPage';
 import ProfilePage from './pages/ProfilePage';
 import FamilyPage from './pages/FamilyPage';
 import Dashboard from './pages/dashboard';
@@ -125,6 +126,7 @@ export default function App() {
         <Route path="/profil" element={<ProfilePage user={user} />} />
         <Route path="/courses" element={<div className="p-10 text-center text-slate-400">Page Courses...</div>} />
         <Route path="/planning" element={<div className="p-10 text-center text-slate-400">Page Planning...</div>} />
+        <Route path="/tracker" element={<TrackerPage user={user} />} />
       </Routes>
 
       <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 py-3 px-6 flex justify-around items-center z-50 text-[10px] font-bold">

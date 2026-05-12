@@ -1,6 +1,6 @@
 import React from 'react';
 import Card from '../components/Card';
-import { Sparkles, ShoppingCart, Calendar, PiggyBank, ChefHat } from 'lucide-react';
+import { Sparkles, ShoppingCart, Calendar, PiggyBank, ChefHat, TrendingUp } from 'lucide-react';
 import logo from '../assets/full-logo.png';
 
 
@@ -78,6 +78,14 @@ export default function Dashboard() {
           color="rose"
           description="Idées repas"
           className="col-span-2" // Prend toute la largeur
+        />
+
+        <Card 
+          title="Bot Prix" 
+          to="/tracker" 
+          icon={TrendingUp} 
+          color="rose" 
+          description="Suivi des prix"
         />
 
       </div>
