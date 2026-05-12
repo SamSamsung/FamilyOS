@@ -208,27 +208,38 @@ export default function Payement() {
         <Settings size={20} />
       </button>
 
-      {/* Modal Paramètres */}
+      {/* Modal Paramètres - Centré Verticalement */}
       {showSettings && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end">
-          <div className="bg-white w-full rounded-t-[2.5rem] p-8 shadow-2xl">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-xl font-black text-slate-800">Paramètres</h3>
-              <button onClick={() => setShowSettings(false)} className="bg-slate-100 p-2 rounded-full text-slate-500"><X size={20}/></button>
+              <button 
+                onClick={() => setShowSettings(false)} 
+                className="bg-slate-100 p-2 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"
+              >
+                <X size={20}/>
+              </button>
             </div>
+            
             <div className="space-y-6">
-              <div>
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-3">Taux horaire (€/h)</label>
+              <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-4 text-center">
+                  TAUX HORAIRE (€/H)
+                </label>
                 <div className="flex items-center gap-4">
                   <input 
                     type="number" 
                     value={hourlyRate} 
                     onChange={(e) => updateRate(parseFloat(e.target.value))}
-                    className="flex-1 bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="flex-1 bg-white border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-800 text-center focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                   />
                 </div>
               </div>
-              <Button className="w-full" onClick={() => setShowSettings(false)}>Fermer</Button>
+              
+              <Button className="w-full py-4" onClick={() => setShowSettings(false)}>
+                Terminer
+              </Button>
             </div>
           </div>
         </div>
