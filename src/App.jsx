@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Home, ShoppingCart, Calendar, PiggyBank, LogIn, Sparkles } from 'lucide-react';
+import { Home, ShoppingCart, Calendar, PiggyBank, LogIn, Sparkles, Users } from 'lucide-react';
 import { onAuthStateChanged, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from './firebase'; // On importe notre config
 import logo from './assets/full-logo.png'; // Assure-toi que ton logo est là
 
+import FamilyPage from './pages/FamilyPage';
 import Dashboard from './pages/dashboard';
 import Services from './pages/services';
 
@@ -82,9 +83,18 @@ export default function App() {
   // SI CONNECTÉ -> APPLICATION NORMALE
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
+      <div className="fixed top-6 right-6 z-50">
+        <Link 
+          to="/famille" 
+          className="bg-white p-3 rounded-full shadow-md text-slate-600 hover:text-indigo-600 hover:shadow-lg transition-all flex items-center justify-center border border-slate-100"
+        >
+          <Users size={22} />
+        </Link>
+      </div>
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/services" element={<Services />} />
+        <Route path="/famille" element={<FamilyPage user={user} />} />
         
         {/* Autres pages */}
         <Route path="/courses" element={<div className="p-10 text-center text-slate-400">Page Courses...</div>} />
