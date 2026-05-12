@@ -148,7 +148,7 @@ export default function Payement() {
         })}
       </div>
 
-      {/* Modal Edition - Centré Verticalement */}
+      {/* Modal Edition (Centré Verticalement + Bouton Supprimer) */}
       {selectedDate && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
           <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -158,17 +158,16 @@ export default function Payement() {
               </h3>
               <button 
                 onClick={() => setSelectedDate(null)} 
-                className="bg-slate-100 p-2 rounded-full text-slate-500"
+                className="bg-slate-100 p-2 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"
               >
                 <X size={20}/>
               </button>
             </div>
-
+            
             <div className="flex flex-col items-center justify-center mb-8 bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">
                 DURÉE DU SERVICE
               </span>
-              
               <div className="flex items-center justify-center gap-6 w-full">
                 <button 
                   onClick={() => setEditHours(h => Math.max(0, h - 0.25))} 
@@ -176,13 +175,11 @@ export default function Payement() {
                 >
                   -
                 </button>
-                
                 <div className="flex-1 flex justify-center items-center">
                   <span className="text-4xl font-black text-slate-800 tabular-nums">
                     {formatHoursFriendly(editHours)}
                   </span>
                 </div>
-                
                 <button 
                   onClick={() => setEditHours(h => h + 0.25)} 
                   className="w-12 h-12 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-100 flex items-center justify-center text-2xl active:scale-90 transition-transform"
@@ -196,8 +193,6 @@ export default function Payement() {
               <Button variant="secondary" onClick={() => setSelectedDate(null)}>
                 Annuler
               </Button>
-              
-              {/* Si on est à 0h et qu'il y avait déjà une entrée existante, on affiche "Supprimer" */}
               {editHours === 0 && entries[selectedDate.toISOString().split('T')[0]] > 0 ? (
                 <Button variant="danger" onClick={saveEntry}>
                   <Trash2 size={18} />
@@ -213,7 +208,7 @@ export default function Payement() {
         </div>
       )}
 
-      {/* Bouton Paramètres (Restauré) */}
+      {/* Bouton Paramètres */}
       <button 
         onClick={() => setShowSettings(true)}
         className="fixed bottom-28 right-6 w-12 h-12 bg-white rounded-full shadow-lg border border-slate-100 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors"
