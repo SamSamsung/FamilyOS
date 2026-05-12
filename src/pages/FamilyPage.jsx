@@ -197,7 +197,7 @@ export default function FamilyPage({ user }) {
             </div>
             <input 
               type="text" 
-              placeholder="Nom de la famille (ex: Les Lelouch)" 
+              placeholder="Nom de la famille (ex: Les Dupont)" 
               value={newFamilyName}
               onChange={(e) => setNewFamilyName(e.target.value)}
               className="w-full p-4 bg-slate-50 border-none rounded-2xl mb-4 focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
