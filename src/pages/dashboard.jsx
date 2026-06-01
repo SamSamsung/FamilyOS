@@ -73,7 +73,7 @@ export default function Dashboard() {
         {/* Module Repas (À venir) */}
         <Card 
           title="Menus" 
-          to="/repas" 
+          to="/recipes" 
           icon={ChefHat} 
           color="rose"
           description="Idées repas"

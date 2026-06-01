@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Home, ShoppingCart, Calendar, PiggyBank, LogIn, Sparkles, Users, User } from 'lucide-react';
+import { Home, ShoppingCart, Calendar, PiggyBank, LogIn, Sparkles, Users, User, ChefHat } from 'lucide-react';
 import { onAuthStateChanged, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, db } from './firebase'; // AJOUT : on importe 'db'
 import { doc, setDoc } from 'firebase/firestore'; // AJOUT : fonctions firestore
@@ -12,6 +12,7 @@ import ProfilePage from './pages/ProfilePage';
 import FamilyPage from './pages/FamilyPage';
 import Dashboard from './pages/dashboard';
 import Services from './pages/services';
+import Recipes from './pages/recipes';
 
 // --- COMPOSANT LOGIN ---
 const LoginScreen = () => {
@@ -124,6 +125,7 @@ export default function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/famille" element={<FamilyPage user={user} />} />
         <Route path="/profil" element={<ProfilePage user={user} />} />
+        <Route path="/recipes" element={<Recipes />} />
         <Route path="/courses" element={<div className="p-10 text-center text-slate-400">Page Courses...</div>} />
         <Route path="/planning" element={<div className="p-10 text-center text-slate-400">Page Planning...</div>} />
         <Route path="/tracker" element={<TrackerPage user={user} />} />
@@ -134,6 +136,7 @@ export default function App() {
         <NavLink to="/services" icon={Sparkles} label="Services" />
         <NavLink to="/courses" icon={ShoppingCart} label="Courses" />
         <NavLink to="/planning" icon={Calendar} label="Agenda" />
+        <NavLink to="/recipes" icon={ChefHat} label="Recipes" />
       </nav>
     </div>
   );
