@@ -18,7 +18,7 @@ const Button = ({ children, onClick, variant = 'primary', className = '', disabl
 
 export default function Payement() {
   const user = auth.currentUser;
-  const [familyId, setFamilyId] = useState(null); // Ajout nécessaire
+  const [familyId, setFamilyId] = useState(null); // Récupération Firebase
   const [entries, setEntries] = useState({});
   const [hourlyRate, setHourlyRate] = useState(15);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -129,10 +129,14 @@ export default function Payement() {
         </div>
       </div>
 
+      {/* L'AJOUT EST ICI : Jours de la semaine ajoutés au-dessus de la date */}
       <div className="grid grid-cols-7 gap-2">
         {daysInMonth.map(date => {
           const dateStr = date.toISOString().split('T')[0];
           const hours = entries[dateStr] || 0;
+          // Format du jour abrégé (lun, mar, mer...)
+          const dayName = date.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '').slice(0, 3);
+          
           return (
             <button
               key={dateStr}
@@ -141,8 +145,9 @@ export default function Payement() {
                 hours > 0 ? 'bg-indigo-600 text-white ring-4 ring-indigo-50' : 'bg-white text-slate-400 border border-slate-100'
               }`}
             >
-              <span className="text-[10px] font-black">{date.getDate()}</span>
-              {hours > 0 && <span className="text-[10px] font-bold">{formatHoursFriendly(hours)}</span>}
+              <span className="text-[9px] uppercase font-bold opacity-70 mb-0.5">{dayName}</span>
+              <span className="text-xs font-black">{date.getDate()}</span>
+              {hours > 0 && <span className="text-[9px] font-bold mt-0.5">{formatHoursFriendly(hours)}</span>}
             </button>
           );
         })}
