@@ -18,7 +18,7 @@ const Button = ({ children, onClick, variant = 'primary', className = '', disabl
 
 export default function Payement() {
   const user = auth.currentUser;
-  const [familyId, setFamilyId] = useState(null); // Récupération Firebase
+  const [familyId, setFamilyId] = useState(null);
   const [entries, setEntries] = useState({});
   const [hourlyRate, setHourlyRate] = useState(15);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -62,11 +62,23 @@ export default function Payement() {
     return remainingMins > 0 ? `${fullHours}h${remainingMins}` : `${fullHours}h`;
   };
 
-  const daysInMonth = useMemo(() => {
+  // NOUVELLE LOGIQUE : Calcul des jours ET des trous du calendrier
+  const { emptyDays, daysInMonth } = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
+    
+    // Les vrais jours du mois
     const days = new Date(year, month + 1, 0).getDate();
-    return Array.from({ length: days }, (_, i) => new Date(year, month, i + 1));
+    const daysArray = Array.from({ length: days }, (_, i) => new Date(year, month, i + 1));
+
+    // Calcul des trous au début du mois
+    // getDay() donne 0 pour Dimanche, 1 pour Lundi... 
+    // On veut adapter pour que Lundi = 0, Mardi = 1, etc.
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const emptyCount = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+    const emptyArray = Array.from({ length: emptyCount }, () => null);
+
+    return { emptyDays: emptyArray, daysInMonth: daysArray };
   }, [currentDate]);
 
   const monthTotalHours = useMemo(() => {
@@ -129,28 +141,41 @@ export default function Payement() {
         </div>
       </div>
 
-      {/* L'AJOUT EST ICI : Jours de la semaine ajoutés au-dessus de la date */}
-      <div className="grid grid-cols-7 gap-2">
-        {daysInMonth.map(date => {
-          const dateStr = date.toISOString().split('T')[0];
-          const hours = entries[dateStr] || 0;
-          // Format du jour abrégé (lun, mar, mer...)
-          const dayName = date.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '').slice(0, 3);
-          
-          return (
-            <button
-              key={dateStr}
-              onClick={() => { setSelectedDate(date); setEditHours(hours); }}
-              className={`aspect-square rounded-2xl flex flex-col items-center justify-center transition-all ${
-                hours > 0 ? 'bg-indigo-600 text-white ring-4 ring-indigo-50' : 'bg-white text-slate-400 border border-slate-100'
-              }`}
-            >
-              <span className="text-[9px] uppercase font-bold opacity-70 mb-0.5">{dayName}</span>
-              <span className="text-xs font-black">{date.getDate()}</span>
-              {hours > 0 && <span className="text-[9px] font-bold mt-0.5">{formatHoursFriendly(hours)}</span>}
-            </button>
-          );
-        })}
+      <div>
+        {/* Ligne des jours de la semaine (LUN, MAR, MER...) */}
+        <div className="grid grid-cols-7 gap-2 mb-2">
+          {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => (
+            <div key={day} className="text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Grille du calendrier (Trous + Jours) */}
+        <div className="grid grid-cols-7 gap-2">
+          {/* Affichage des trous pour décaler les jours */}
+          {emptyDays.map((_, index) => (
+            <div key={`empty-${index}`} className="aspect-square rounded-2xl bg-transparent"></div>
+          ))}
+
+          {/* Affichage des vrais jours */}
+          {daysInMonth.map(date => {
+            const dateStr = date.toISOString().split('T')[0];
+            const hours = entries[dateStr] || 0;
+            return (
+              <button
+                key={dateStr}
+                onClick={() => { setSelectedDate(date); setEditHours(hours); }}
+                className={`aspect-square rounded-2xl flex flex-col items-center justify-center transition-all ${
+                  hours > 0 ? 'bg-indigo-600 text-white ring-4 ring-indigo-50' : 'bg-white text-slate-400 border border-slate-100'
+                }`}
+              >
+                <span className="text-[10px] font-black">{date.getDate()}</span>
+                {hours > 0 && <span className="text-[10px] font-bold">{formatHoursFriendly(hours)}</span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Modal Edition (Centré Verticalement + Bouton Supprimer) */}
