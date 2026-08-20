@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Home, ShoppingCart, Calendar, PiggyBank, LogIn, Sparkles, Users, User, ChefHat } from 'lucide-react';
-import { onAuthStateChanged, signInWithPopup } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider, db } from './firebase'; // AJOUT : on importe 'db'
 import { doc, setDoc } from 'firebase/firestore'; // AJOUT : fonctions firestore
 import logo from './assets/full-logo.png';
@@ -15,12 +15,54 @@ import Services from './pages/services';
 import Recipes from './pages/recipes';
 
 // --- COMPOSANT LOGIN ---
-const LoginScreen = () => {
+// Codes d'erreur qui signifient "la popup n'a pas pu s'ouvrir" : dans ce cas
+// seulement, on retente en redirection (Zen, Firefox strict, Safari, in-app...).
+const POPUP_UNAVAILABLE = [
+  'auth/popup-blocked',
+  'auth/operation-not-supported-in-this-environment',
+  'auth/web-storage-unsupported',
+];
+
+// Erreurs que l'utilisateur provoque lui-même : on ne l'embête pas avec.
+const USER_CANCELLED = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
+
+const LoginScreen = ({ initialError }) => {
+  // undefined = on n'a rien tenté depuis, on affiche l'erreur venue de la redirection.
+  const [ownError, setOwnError] = useState(undefined);
+  const [pending, setPending] = useState(false);
+  const error = ownError === undefined ? initialError : ownError;
+
   const handleLogin = async () => {
+    setOwnError(null);
+    setPending(true);
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error("Erreur de connexion", error);
+      return; // onAuthStateChanged prend le relais
+    } catch (err) {
+      console.error("Erreur de connexion (popup)", err);
+
+      if (USER_CANCELLED.includes(err.code)) {
+        setPending(false);
+        return;
+      }
+
+      if (POPUP_UNAVAILABLE.includes(err.code)) {
+        try {
+          // On marque la tentative pour pouvoir détecter un retour "vide".
+          sessionStorage.setItem('authRedirectPending', '1');
+          await signInWithRedirect(auth, googleProvider);
+          return; // la page part sur Google
+        } catch (redirectErr) {
+          console.error("Erreur de connexion (redirect)", redirectErr);
+          sessionStorage.removeItem('authRedirectPending');
+          setOwnError(`${redirectErr.code || 'erreur'} — ${redirectErr.message}`);
+          setPending(false);
+          return;
+        }
+      }
+
+      setOwnError(`${err.code || 'erreur'} — ${err.message}`);
+      setPending(false);
     }
   };
 
@@ -32,13 +74,27 @@ const LoginScreen = () => {
           <h2 className="text-2xl font-black text-slate-800">MyFamilyOS</h2>
           <p className="text-slate-500 mt-2 font-medium">L'intendance familiale simplifiée.</p>
         </div>
-        <button 
-          onClick={handleLogin}
-          className="w-full py-3 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-sm"
-        >
-          <LogIn size={20} />
-          Continuer avec Google
-        </button>
+        <div className="w-full space-y-4">
+          <button 
+            onClick={handleLogin}
+            disabled={pending}
+            className="w-full py-3 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-sm disabled:opacity-60"
+          >
+            <LogIn size={20} />
+            {pending ? 'Connexion...' : 'Continuer avec Google'}
+          </button>
+
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-600 rounded-2xl p-4 text-left space-y-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em]">Connexion impossible</p>
+              <p className="text-xs font-medium break-words">{error}</p>
+              <p className="text-xs text-red-400 font-medium">
+                Si ton navigateur bloque les cookies tiers (Zen, Firefox strict, Safari),
+                désactive la protection renforcée pour ce site puis réessaie.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -64,6 +120,29 @@ const NavLink = ({ to, icon: Icon, label }) => {
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
+
+  // Retour d'une connexion par redirection : on récupère le résultat pour
+  // pouvoir afficher une vraie erreur au lieu de reboucler sur l'écran de login.
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (!sessionStorage.getItem('authRedirectPending')) return;
+        sessionStorage.removeItem('authRedirectPending');
+        if (!result) {
+          setAuthError(
+            "La redirection est revenue sans session. Ton navigateur bloque le stockage tiers " +
+            "utilisé par Firebase : désactive la protection renforcée pour ce site, ou utilise " +
+            "un autre navigateur en attendant."
+          );
+        }
+      })
+      .catch((err) => {
+        console.error("Erreur au retour de redirection", err);
+        sessionStorage.removeItem('authRedirectPending');
+        setAuthError(`${err.code || 'erreur'} — ${err.message}`);
+      });
+  }, []);
 
   useEffect(() => {
     // On passe la fonction en 'async' pour pouvoir utiliser 'await setDoc'
@@ -101,7 +180,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <LoginScreen />;
+    return <LoginScreen initialError={authError} />;
   }
 
   return (
